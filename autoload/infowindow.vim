@@ -17,6 +17,7 @@ function infowindow#setup_window(win, buf, opts)
   call nvim_buf_set_name(a:buf, '1_infowindow_1')
   call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'StatusLine')
   call setwinvar(a:win, '&colorcolumn', '')
+  call nvim_win_set_config(a:win, a:opts)
 endfunction
 
 function infowindow#create(lines, timeout)
@@ -50,7 +51,8 @@ function infowindow#create(lines, timeout)
         \ 'height': len(a:lines)
         \ }
 
-  call nvim_buf_set_lines(buf, 0, 0, v:true, a:lines)
+  let last_index = nvim_buf_line_count(buf)
+  call nvim_buf_set_lines(buf, 0, last_index, v:true, a:lines)
   if !exists("g:infowindow_mainwindow")
     let g:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
   endif
