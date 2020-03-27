@@ -18,7 +18,7 @@ Plug 'mcchrish/info-window.nvim'
 ```
 
 <p align="center">
-  <img width="934" src="https://user-images.githubusercontent.com/7200153/77720727-b91be200-7023-11ea-92c3-aa5824bfafe9.png">
+  <img width="934" src="https://user-images.githubusercontent.com/7200153/77721438-dce02780-7025-11ea-9f70-0540eba1fae3.png" alt="sample screenshot">
   <small>colorscheme <a href="https://github.com/pgdouyon/vim-yin-yang">yin</a></small>
 </p>
 
