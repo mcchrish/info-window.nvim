@@ -32,5 +32,7 @@ popup. So if anyone wants to add some improvements, go ahead.
 
 - [ ] vim popup
 - [ ] borders
+- [ ] more file details and customization
 - [ ] able to add custom text
 - [ ] customize colors/highlighting
+- [ ] reactive: display info about whatever current buffer
