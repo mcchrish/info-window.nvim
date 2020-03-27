@@ -5,6 +5,7 @@ function infowindow#destroy()
   if (bufexists(g:infowindow_buffnr))
     execute 'bdelete ' . g:infowindow_buffnr
     let g:infowindow_buffnr = -1
+    unlet g:infowindow_mainwindow
   endif
 endfunction
 
@@ -12,13 +13,15 @@ function infowindow#timer_handler(timer)
   call infowindow#destroy()
 endfunction
 
-function infowindow#create(lines, timeout)
-  if (bufexists(g:infowindow_buffnr))
-    if exists("g:infowindow_timer")
-      call timer_stop(g:infowindow_timer)
-    endif
+function infowindow#setup_window(win, buf, opts)
+  call nvim_buf_set_name(a:buf, '1_infowindow_1')
+  call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'StatusLine')
+  call setwinvar(a:win, '&colorcolumn', '')
+endfunction
 
-    call infowindow#destroy()
+function infowindow#create(lines, timeout)
+  if (bufexists(g:infowindow_buffnr) && exists("g:infowindow_timer"))
+    call timer_stop(g:infowindow_timer)
   endif
 
   let lengths = []
@@ -31,8 +34,12 @@ function infowindow#create(lines, timeout)
         \ &columns / 2
         \ ])
 
-  let buf = nvim_create_buf(v:false, v:true)
-  let g:infowindow_buffnr = buf
+  if !bufexists(g:infowindow_buffnr)
+    let buf = nvim_create_buf(v:false, v:true)
+    let g:infowindow_buffnr = buf
+  else
+    let buf = g:infowindow_buffnr
+  endif
 
   let opts = {
         \ 'relative': 'editor',
@@ -42,11 +49,12 @@ function infowindow#create(lines, timeout)
         \ 'width': width,
         \ 'height': len(a:lines)
         \ }
-  call nvim_buf_set_name(buf, '1_infowindow_1')
+
   call nvim_buf_set_lines(buf, 0, 0, v:true, a:lines)
-  let win = nvim_open_win(buf, v:false, opts)
-  call setwinvar(win, '&winhighlight', 'NormalFloat:'..'StatusLine')
-  call setwinvar(win, '&colorcolumn', '')
+  if !exists("g:infowindow_mainwindow")
+    let g:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
+  endif
+  call infowindow#setup_window(g:infowindow_mainwindow, buf, opts)
 
   if a:timeout > 0
     let g:infowindow_timer = timer_start(a:timeout, 'infowindow#timer_handler')
