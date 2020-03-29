@@ -13,7 +13,7 @@ function infowindow#timer_handler(timer)
   call infowindow#destroy()
 endfunction
 
-function infowindow#setup_window(win, buf, opts)
+function s:setup_window(win, buf, opts)
   call nvim_buf_set_name(a:buf, '1_infowindow_1')
   call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'StatusLine')
   call setwinvar(a:win, '&colorcolumn', '')
@@ -56,7 +56,7 @@ function infowindow#create(lines, timeout)
   if !exists("g:infowindow_mainwindow")
     let g:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
   endif
-  call infowindow#setup_window(g:infowindow_mainwindow, buf, opts)
+  call <SID>setup_window(g:infowindow_mainwindow, buf, opts)
 
   if a:timeout > 0
     let g:infowindow_timer = timer_start(a:timeout, 'infowindow#timer_handler')
