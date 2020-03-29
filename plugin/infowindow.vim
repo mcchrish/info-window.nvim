@@ -1,8 +1,8 @@
-function! infowindow#create_default()
+function! infowindow#create_default(timeout)
   let lines = get(g:, 'infowindow_lines', [])
-  let timeout = get(g:, 'infowindow_timeout', 2500)
+  let duration = get(g:, 'infowindow_timeout', a:timeout)
   if len(lines) != 0
-    call infowindow#create(lines, timeout)
+    call infowindow#create(lines, duration)
     return
   endif
 
@@ -18,8 +18,18 @@ function! infowindow#create_default()
   call add(lines, ' format: ' . &fileformat . ' ')
   call add(lines, ' lines: ' . line('$') . ' ')
 
-  call infowindow#create(lines, timeout)
+  call infowindow#create(lines, duration)
 endfunction
 
-command! InfoWindowShow call infowindow#create_default()
+function! infowindow#toggle()
+    if g:infowindow_buffnr != -1
+        call infowindow#destroy()
+    else
+        call infowindow#create_default(-1)
+    endif
+endfunction
+
+command! InfoWindowShow call infowindow#create_default(2500)
 command! InfoWindowClose call infowindow#destroy()
+
+command! InfoWindowToggle call infowindow#toggle()
