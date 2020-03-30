@@ -1,4 +1,5 @@
 let g:infowindow_buffnr = -1
+let s:infowindow_timer = v:null
 
 function infowindow#destroy()
   if (bufexists(g:infowindow_buffnr))
@@ -6,9 +7,9 @@ function infowindow#destroy()
     let g:infowindow_buffnr = -1
     unlet g:infowindow_mainwindow
   endif
-  if (exists("g:infowindow_timer"))
-    call timer_stop(g:infowindow_timer)
-    unlet g:infowindow_timer
+  if s:infowindow_timer != v:null
+    call timer_stop(s:infowindow_timer)
+    let s:infowindow_timer = v:null
   endif
 endfunction
 
@@ -24,9 +25,9 @@ function s:setup_window(win, buf, opts)
 endfunction
 
 function infowindow#create(lines, timeout)
-  if (bufexists(g:infowindow_buffnr) && exists("g:infowindow_timer"))
-    call timer_stop(g:infowindow_timer)
-    unlet g:infowindow_timer
+  if (bufexists(g:infowindow_buffnr) && s:infowindow_timer != v:null)
+    call timer_stop(s:infowindow_timer)
+    let s:infowindow_timer = v:null
   endif
 
   let lengths = []
@@ -63,13 +64,14 @@ function infowindow#create(lines, timeout)
   call <SID>setup_window(g:infowindow_mainwindow, buf, opts)
 
   if a:timeout > 0
-    let g:infowindow_timer = timer_start(a:timeout, 'infowindow#timer_handler')
+    let s:infowindow_timer = timer_start(a:timeout, 'infowindow#timer_handler')
   endif
 endfunction
 
 function! infowindow#create_default(timeout)
   let lines = get(g:, 'infowindow_lines', [])
   let duration = get(g:, 'infowindow_timeout', a:timeout)
+  echom 'here' . a:timeout
   if len(lines) != 0
     call infowindow#create(lines, duration)
     return
@@ -93,6 +95,6 @@ function! infowindow#toggle()
     if g:infowindow_buffnr != -1
         call infowindow#destroy()
     else
-        call infowindow#create_default(-1)
+        call infowindow#create_default(2500)
     endif
 endfunction
