@@ -13,7 +13,7 @@ function infowindow#destroy()
   endif
 endfunction
 
-function infowindow#timer_handler(timer)
+function s:timer_handler(timer)
   call infowindow#destroy()
 endfunction
 
@@ -64,7 +64,7 @@ function infowindow#create(lines, timeout)
   call <SID>setup_window(g:infowindow_mainwindow, buf, opts)
 
   if a:timeout > 0
-    let s:infowindow_timer = timer_start(a:timeout, 'infowindow#timer_handler')
+    let s:infowindow_timer = timer_start(a:timeout, function('s:timer_handler'))
   endif
 endfunction
 
