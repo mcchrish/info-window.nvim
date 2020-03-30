@@ -41,6 +41,17 @@ By default, the information window will disappear after 2.5 seconds. You can
 change it using `g:infowindow_timeout`. If the timeout is `0`, then it will
 not be closed automatically.
 
+### Highlighting
+
+You can change the highlighting of the floating window by setting
+`InfoWindowFloat`.
+
+Default:
+
+```vim
+highlight link InfoWindowFloat StatusLine
+```
+
 <p align="center">
   <img width="934" src="https://user-images.githubusercontent.com/7200153/77721438-dce02780-7025-11ea-9f70-0540eba1fae3.png" alt="sample screenshot">
   <small>colorscheme <a href="https://github.com/pgdouyon/vim-yin-yang">yin</a></small>

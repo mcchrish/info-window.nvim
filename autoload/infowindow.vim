@@ -2,6 +2,8 @@ let g:infowindow_buffnr = -1
 let s:infowindow_timer = v:null
 let s:infowindow_mainwindow = v:null
 
+highlight link InfoWindowFloat StatusLine
+
 function infowindow#destroy()
   if (bufexists(g:infowindow_buffnr))
     execute 'bdelete ' . g:infowindow_buffnr
@@ -20,7 +22,7 @@ endfunction
 
 function s:setup_window(win, buf, opts)
   call nvim_buf_set_name(a:buf, '1_infowindow_1')
-  call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'StatusLine')
+  call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'InfoWindowFloat')
   call setwinvar(a:win, '&colorcolumn', '')
   call nvim_win_set_config(a:win, a:opts)
 endfunction
