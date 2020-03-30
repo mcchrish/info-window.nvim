@@ -17,6 +17,30 @@ Any package manager will do.
 Plug 'mcchrish/info-window.nvim'
 ```
 
+## Configuration
+
+By default, the following information is displayed in the information window:
+
+- Buffer name
+- Buffer type
+- Buffer format
+- Number of lines
+
+But you can use `g:infowindow_lines` to control the lines that you display in
+the information window.
+
+```vim
+let g:infowindow_lines = [
+    \ " Line: " . line('.'),
+    \ " Column: " . col('.'),
+    \ " File: " . &filetype . ' - ' . &fileencoding . ' [' . &fileformat . ']',
+    ]
+```
+
+By default, the information window will disappear after 2.5 seconds. You can
+change it using `g:infowindow_timeout`. If the timeout is `0`, then it will
+not be closed automatically.
+
 <p align="center">
   <img width="934" src="https://user-images.githubusercontent.com/7200153/77721438-dce02780-7025-11ea-9f70-0540eba1fae3.png" alt="sample screenshot">
   <small>colorscheme <a href="https://github.com/pgdouyon/vim-yin-yang">yin</a></small>
