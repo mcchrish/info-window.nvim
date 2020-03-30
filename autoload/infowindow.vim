@@ -1,11 +1,12 @@
 let g:infowindow_buffnr = -1
 let s:infowindow_timer = v:null
+let s:infowindow_mainwindow = v:null
 
 function infowindow#destroy()
   if (bufexists(g:infowindow_buffnr))
     execute 'bdelete ' . g:infowindow_buffnr
     let g:infowindow_buffnr = -1
-    unlet g:infowindow_mainwindow
+    let s:infowindow_mainwindow = v:null
   endif
   if s:infowindow_timer != v:null
     call timer_stop(s:infowindow_timer)
@@ -58,10 +59,10 @@ function infowindow#create(lines, timeout)
 
   let last_index = nvim_buf_line_count(buf)
   call nvim_buf_set_lines(buf, 0, last_index, v:true, a:lines)
-  if !exists("g:infowindow_mainwindow")
-    let g:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
+  if s:infowindow_mainwindow == v:null
+    let s:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
   endif
-  call <SID>setup_window(g:infowindow_mainwindow, buf, opts)
+  call <SID>setup_window(s:infowindow_mainwindow, buf, opts)
 
   if a:timeout > 0
     let s:infowindow_timer = timer_start(a:timeout, function('s:timer_handler'))
