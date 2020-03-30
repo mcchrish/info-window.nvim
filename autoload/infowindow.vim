@@ -74,7 +74,6 @@ endfunction
 function! infowindow#create_default(timeout)
   let lines = get(g:, 'infowindow_lines', [])
   let duration = get(g:, 'infowindow_timeout', a:timeout)
-  echom 'here' . a:timeout
   if len(lines) != 0
     call infowindow#create(lines, duration)
     return
