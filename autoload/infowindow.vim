@@ -7,6 +7,10 @@ function infowindow#destroy()
     let g:infowindow_buffnr = -1
     unlet g:infowindow_mainwindow
   endif
+  if (exists("g:infowindow_timer"))
+    call timer_stop(g:infowindow_timer)
+    unlet g:infowindow_timer
+  endif
 endfunction
 
 function infowindow#timer_handler(timer)
@@ -23,6 +27,7 @@ endfunction
 function infowindow#create(lines, timeout)
   if (bufexists(g:infowindow_buffnr) && exists("g:infowindow_timer"))
     call timer_stop(g:infowindow_timer)
+    unlet g:infowindow_timer
   endif
 
   let lengths = []
