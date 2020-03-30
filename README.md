@@ -60,3 +60,4 @@ popup. So if anyone wants to add some improvements, go ahead.
 - [ ] able to add custom text
 - [ ] customize colors/highlighting
 - [ ] reactive: display info about whatever current buffer
+- [ ] close window on cursor move
