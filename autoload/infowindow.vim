@@ -4,7 +4,7 @@ let s:infowindow_mainwindow = v:null
 
 highlight link InfoWindowFloat StatusLine
 
-function infowindow#destroy()
+function infowindow#destroy() abort
   if (bufexists(g:infowindow_buffnr))
     execute 'bdelete ' . g:infowindow_buffnr
     let g:infowindow_buffnr = -1
@@ -16,11 +16,21 @@ function infowindow#destroy()
   endif
 endfunction
 
-function s:timer_handler(timer)
+function s:timer_handler(timer) abort
   call infowindow#destroy()
 endfunction
 
-function s:setup_window(win, buf, opts)
+function s:add_padding(text, padding) abort
+  let count = 0
+  let l:padded_text = a:text . ': '
+  while l:count < a:padding
+    let l:padded_text = l:padded_text . ' '
+    let l:count = l:count + 1
+  endwhile
+  return l:padded_text
+endfunction
+
+function s:setup_window(win, buf, opts) abort
   call nvim_buf_set_name(a:buf, '1_infowindow_1')
   call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'InfoWindowFloat')
   call setwinvar(a:win, '&colorcolumn', '')
@@ -33,9 +43,25 @@ function infowindow#create(lines, timeout)
     let s:infowindow_timer = v:null
   endif
 
+  let l:max_label_len = 0
+  for l:line in a:lines
+    if type(l:line) == v:t_list && strlen(l:line[0]) > l:max_label_len
+      let l:max_label_len = strlen(l:line[0])
+    endif
+  endfor
+
+  let l:formatted_lines = []
+  for l:line in a:lines
+    if type(l:line) == v:t_list 
+      call add(l:formatted_lines, ' ' . <SID>add_padding(l:line[0], l:max_label_len - strlen(l:line[0])) . l:line[1] . ' ')
+    else
+      call add(l:formatted_lines, ' ' . l:line . ' ')
+    endif
+  endfor
+
   let lengths = []
-  for lines in a:lines
-    call add(lengths, strlen(lines))
+  for l:line in l:formatted_lines
+    call add(lengths, strlen(l:line))
   endfor
 
   let width = min([
@@ -60,7 +86,7 @@ function infowindow#create(lines, timeout)
         \ }
 
   let last_index = nvim_buf_line_count(buf)
-  call nvim_buf_set_lines(buf, 0, last_index, v:true, a:lines)
+  call nvim_buf_set_lines(buf, 0, last_index, v:true, l:formatted_lines)
   if s:infowindow_mainwindow == v:null
     let s:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
   endif
@@ -71,26 +97,28 @@ function infowindow#create(lines, timeout)
   endif
 endfunction
 
-function! infowindow#create_default(timeout)
-  let lines = get(g:, 'infowindow_lines', [])
-  let duration = get(g:, 'infowindow_timeout', a:timeout)
-  if len(lines) != 0
-    call infowindow#create(lines, duration)
-    return
+function! infowindow#get_default_lines() abort
+  let l:lines = []
+
+  let buffilename = expand("%:t")
+  call add(l:lines, ['name', strlen(l:buffilename) > 0 ? l:buffilename : '[No Name]'])
+  call add(l:lines, ['type', strlen(&filetype) > 0 ? &filetype : 'unknown'])
+  call add(l:lines, ['format',&fileformat ])
+  call add(l:lines, ['lines', line('$') ])
+  return l:lines
+endfunction
+
+function! infowindow#create_default(timeout) abort
+  let l:lines = []
+  if type(g:Infowindow_generate_content) == v:t_func
+    let l:lines = call(g:Infowindow_generate_content, [])
+  else
+    let l:lines = infowindow#get_default_lines()
   endif
 
-  let cbuf = bufnr('')
-  let buffilename = expand("%:t")
-  call add(lines,
-        \ ' name:   ' . (strlen(buffilename) > 0 ? buffilename : '[No Name]') . ' ')
+  let duration = get(g:, 'infowindow_timeout', a:timeout)
 
-  call add(lines,
-        \ ' type:   ' . (strlen(&filetype) > 0 ? &filetype : 'unknown') . ' ')
-
-  call add(lines, ' format: ' . &fileformat . ' ')
-  call add(lines, ' lines:  ' . line('$') . ' ')
-
-  call infowindow#create(lines, duration)
+  call infowindow#create(l:lines, duration)
 endfunction
 
 function! infowindow#toggle()

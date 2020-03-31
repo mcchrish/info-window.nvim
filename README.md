@@ -26,15 +26,18 @@ By default, the following information is displayed in the information window:
 - Buffer format
 - Number of lines
 
-But you can use `g:infowindow_lines` to control the lines that you display in
-the information window.
+But you can use `g:Infowindow_generate_content` to control the lines that you display in
+the information window. Note it must be a function. See example:
 
 ```vim
-let g:infowindow_lines = [
-    \ " Line: " . line('.'),
-    \ " Column: " . col('.'),
-    \ " File: " . &filetype . ' - ' . &fileencoding . ' [' . &fileformat . ']',
-    ]
+" Extend the default content and add current git branch
+" Lines can be plain string or a list where the first element is the label and
+" the second element is the content. It will be then automatically formatted.
+function! s:custom_infowindow_content()
+      return extend(infowindow#get_default_lines(),
+                        \ [['branch',fugitive#head()]])
+endfunction
+let g:Infowindow_generate_content = function('s:custom_infowindow_content')
 ```
 
 By default, the information window will disappear after 2.5 seconds. You can
