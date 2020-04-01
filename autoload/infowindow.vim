@@ -1,30 +1,19 @@
-let g:infowindow_buffnr = -1
 if !exists('g:infowindow_timeout')
   let g:infowindow_timeout = 2500
 endif
-let s:infowindow_timer = v:null
-let s:infowindow_mainwindow = v:null
+
+let s:bufnr = -1
+let s:timer = v:null
+let s:win_id = v:null
 
 highlight link InfoWindowFloat StatusLine
 
-function infowindow#destroy() abort
-  if (bufexists(g:infowindow_buffnr))
-    execute 'bdelete ' . g:infowindow_buffnr
-    let g:infowindow_buffnr = -1
-    let s:infowindow_mainwindow = v:null
-  endif
-  if s:infowindow_timer != v:null
-    call timer_stop(s:infowindow_timer)
-    let s:infowindow_timer = v:null
-  endif
-endfunction
-
-function s:timer_handler(timer) abort
+function! s:timer_handler(timer)
   call infowindow#destroy()
 endfunction
 
-function s:add_padding(text, padding) abort
-  let count = 0
+function! s:add_padding(text, padding)
+  let l:count = 0
   let l:padded_text = a:text . ': '
   while l:count < a:padding
     let l:padded_text = l:padded_text . ' '
@@ -33,14 +22,24 @@ function s:add_padding(text, padding) abort
   return l:padded_text
 endfunction
 
-function s:setup_window(win, buf, opts) abort
+function! s:setup_window(win, buf, opts)
   call nvim_buf_set_name(a:buf, '1_infowindow_1')
   call setwinvar(a:win, '&winhighlight', 'NormalFloat:'..'InfoWindowFloat')
   call setwinvar(a:win, '&colorcolumn', '')
   call nvim_win_set_config(a:win, a:opts)
 endfunction
 
-function infowindow#create(...) abort
+function! infowindow#get_default_lines() abort
+  let l:lines = []
+  let buffilename = expand("%:t")
+  call add(l:lines, ['name', strlen(l:buffilename) > 0 ? l:buffilename : '[No Name]'])
+  call add(l:lines, ['type', strlen(&filetype) > 0 ? &filetype : 'unknown'])
+  call add(l:lines, ['format',&fileformat ])
+  call add(l:lines, ['lines', line('$') ])
+  return l:lines
+endfunction
+
+function! infowindow#create(...) abort
   let l:lines = []
   let l:opts = get(a:, 1, {})
   let l:Custom_content_func = get(a:, 2, v:null)
@@ -52,9 +51,9 @@ function infowindow#create(...) abort
 
   let l:timeout = get(l:opts, 'timeout', g:infowindow_timeout)
 
-  if (bufexists(g:infowindow_buffnr) && s:infowindow_timer != v:null)
-    call timer_stop(s:infowindow_timer)
-    let s:infowindow_timer = v:null
+  if (bufexists(s:bufnr) && s:timer != v:null)
+    call timer_stop(s:timer)
+    let s:timer = v:null
   endif
 
   let l:max_label_len = 0
@@ -73,57 +72,61 @@ function infowindow#create(...) abort
     endif
   endfor
 
-  let lengths = []
+  let l:lengths = []
   for l:line in l:formatted_lines
-    call add(lengths, strlen(l:line))
+    call add(l:lengths, strlen(l:line))
   endfor
 
-  let width = min([
-        \ max(lengths),
+  let l:width = min([
+        \ max(l:lengths),
         \ &columns / 2
         \ ])
 
-  if !bufexists(g:infowindow_buffnr)
-    let buf = nvim_create_buf(v:false, v:true)
-    let g:infowindow_buffnr = buf
+  if !bufexists(s:bufnr)
+    let l:buf = nvim_create_buf(v:false, v:true)
+    let s:bufnr = l:buf
   else
-    let buf = g:infowindow_buffnr
+    let l:buf = s:bufnr
   endif
 
-  let opts = {
+  let l:win_opts = {
         \ 'relative': 'editor',
         \ 'style': 'minimal',
         \ 'row': 2,
-        \ 'col': &columns - (width + 4),
-        \ 'width': width,
+        \ 'col': &columns - (l:width + 4),
+        \ 'width': l:width,
         \ 'height': len(l:lines)
         \ }
 
-  let last_index = nvim_buf_line_count(buf)
-  call nvim_buf_set_lines(buf, 0, last_index, v:true, l:formatted_lines)
-  if s:infowindow_mainwindow == v:null
-    let s:infowindow_mainwindow = nvim_open_win(buf, v:false, opts)
+  let l:last_idx = nvim_buf_line_count(buf)
+  call nvim_buf_set_lines(l:buf, 0, l:last_idx, v:true, l:formatted_lines)
+  if s:win_id == v:null
+    let s:win_id = nvim_open_win(l:buf, v:false, l:win_opts)
   endif
-  call <SID>setup_window(s:infowindow_mainwindow, buf, opts)
+  call <SID>setup_window(s:win_id, l:buf, l:win_opts)
 
   if l:timeout > 0
-    let s:infowindow_timer = timer_start(l:timeout, function('s:timer_handler'))
+    let s:timer = timer_start(l:timeout, function('s:timer_handler'))
   endif
 endfunction
 
-function! infowindow#get_default_lines() abort
-  let l:lines = []
-
-  let buffilename = expand("%:t")
-  call add(l:lines, ['name', strlen(l:buffilename) > 0 ? l:buffilename : '[No Name]'])
-  call add(l:lines, ['type', strlen(&filetype) > 0 ? &filetype : 'unknown'])
-  call add(l:lines, ['format',&fileformat ])
-  call add(l:lines, ['lines', line('$') ])
-  return l:lines
+function! infowindow#destroy() abort
+  if s:win_id != v:null
+    call nvim_win_close(s:win_id, v:false)
+    let s:win_id = v:null
+  endif
+  if (bufexists(s:bufnr))
+    execute 'bwipeout ' . s:bufnr
+    let s:bufnr = -1
+  endif
+  if s:timer != v:null
+    call timer_stop(s:timer)
+    let s:timer = v:null
+  endif
 endfunction
 
 function! infowindow#toggle(...) abort
-    if g:infowindow_buffnr != -1
+    if s:bufnr != -1
         call infowindow#destroy()
     else
       let l:opts = get(a:, 1, {})
